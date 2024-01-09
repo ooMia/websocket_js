@@ -12,9 +12,9 @@ import {
   getRandomInteger,
 } from "./http-test.js";
 
-// const serverHost = "43.200.211.174"; // Personal EC2
+const serverHost = "13.125.66.243"; // Personal EC2
 // const serverHost = "43.201.65.76"; // Sinor EC2
-const serverHost = "localhost";
+// const serverHost = "localhost";
 
 const connectionHeaders = {
   login: "server",
@@ -73,29 +73,34 @@ Promise.resolve(postMember())
     // console.log(willUpdateLog);
   })
   .then((res) => {
-    let status = 0;
     const client = new Client({
       brokerURL: `ws://${serverHost}:15674/ws`,
       connectHeaders: connectionHeaders,
       onConnect: () => {
         client.subscribe(`/exchange/vote.client/${voteId}.#`, (message) => {
-          console.log(`header: ${message.headers["method"]}`);
-          console.log(`body: ${message.body}`);
-          status = status + 1;
+          console.log(
+            `[${new Date().toLocaleString("en-GB", { timeZone: "UTC" })}] ${
+              message.headers["method"]
+            } ${message.headers["Number-Data-Remains"]}`
+          );
+          console.log(`${message.body}`);
+
+          if (message.headers["Number-Data-Remains"] == 0) {
+            client.deactivate({ force: true });
+          }
         });
 
-        if (status === 0) {
-          client.publish({
-            headers: { method: "delete" },
-            destination: `/exchange/vote.server/${voteId}`,
-            body: JSON.stringify(didSavedLog),
-          });
-          client.publish({
-            headers: { method: "post" },
-            destination: `/exchange/vote.server/${voteId}`,
-            body: JSON.stringify(willUpdateLog),
-          });
-        }
+        // client.publish({
+        //   headers: { method: "delete", "Number-Data-Remains": 1 },
+        //   destination: `/exchange/vote.server/${voteId}}`,
+        //   body: JSON.stringify(didSavedLog),
+        // });
+
+        // client.publish({
+        //   headers: { method: "post", "Number-Data-Remains": 0 },
+        //   destination: `/exchange/vote.server/${voteId}`,
+        //   body: JSON.stringify(willUpdateLog),
+        // });
       },
     });
     client.activate();

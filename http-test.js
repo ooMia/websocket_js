@@ -1,13 +1,15 @@
-// const serverHost = "43.200.211.174"; // Personal EC2
+const serverHost = "13.125.66.243"; // Personal EC2
 // const serverHost = "43.201.65.76"; // Sinor EC2
-const serverHost = "localhost";
+// const serverHost = "localhost";
 
-async function postData(url = "", data = {}) {
+async function postData(
+  url = "",
+  data = {},
+  headers = { "Content-Type": "application/json" }
+) {
   const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: headers,
     body: JSON.stringify(data),
   });
   return response.json();
@@ -56,7 +58,11 @@ function postVoteLog(voteItemId = 1, memberId = 1) {
     voteItemId: voteItemId,
     memberId: memberId,
   };
-  return postData(`http://${serverHost}:8080/vote/log`, voteLogRequestDto);
+
+  return postData(`http://${serverHost}:8080/vote/log`, voteLogRequestDto, {
+    "Content-Type": "application/json",
+    "Number-Data-Remains": 0,
+  });
 }
 
 function getRandomInteger() {
